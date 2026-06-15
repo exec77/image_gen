@@ -8,8 +8,8 @@ export const IMAGE_MODELS = new Set([
 
 export const DEFAULT_MODEL = "openai/gpt-5.4-image-2";
 
-const MAX_REQUEST_BYTES = 12 * 1024 * 1024;
-const MAX_IMAGE_BYTES_AS_DATA_URI = 2.8 * 1024 * 1024;
+const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
+const MAX_IMAGE_BYTES_AS_DATA_URI = 700 * 1024;
 const IMAGE_DATA_URI = /^data:image\/(png|jpe?g|webp);base64,/i;
 
 export function sendJson(res, statusCode, payload) {
@@ -28,7 +28,19 @@ export function getApiKey() {
 }
 
 export async function readJson(req) {
+  const declaredLength = Number.parseInt(req.headers?.["content-length"] || "0", 10);
+
+  if (declaredLength > MAX_REQUEST_BYTES) {
+    const error = new Error("Request body is too large. Reduce reference images or upload fewer files.");
+    error.statusCode = 413;
+    throw error;
+  }
+
   if (req.body && typeof req.body === "object") {
+    if (Buffer.isBuffer(req.body)) {
+      return JSON.parse(req.body.toString("utf8") || "{}");
+    }
+
     return req.body;
   }
 

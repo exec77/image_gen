@@ -1,6 +1,9 @@
 const MAX_FILES_PER_KIND = 6;
-const MAX_IMAGE_EDGE = 1600;
-const JPEG_QUALITY = 0.86;
+const MAX_IMAGE_EDGE = 1024;
+const INITIAL_JPEG_QUALITY = 0.82;
+const MIN_JPEG_QUALITY = 0.56;
+const MAX_IMAGE_DATA_URL_BYTES = 380 * 1024;
+const MAX_GENERATION_PAYLOAD_BYTES = 3.4 * 1024 * 1024;
 const HISTORY_STORAGE_KEY = "image_gen:selectedGeneration";
 const DB_NAME = "image_gen_history";
 const DB_VERSION = 1;
@@ -211,6 +214,12 @@ async function submitGeneration(event) {
       characters: state.characters.map(toPayloadImage)
     };
 
+    const payloadBytes = textBytes(JSON.stringify(payload));
+
+    if (payloadBytes > MAX_GENERATION_PAYLOAD_BYTES) {
+      throw new Error("Запрос слишком большой для Vercel. Удалите часть референсов или загрузите изображения меньшего размера.");
+    }
+
     const delegated = await sendGenerationToWorker(generation, payload);
 
     if (delegated) {
@@ -223,7 +232,7 @@ async function submitGeneration(event) {
       body: JSON.stringify(payload)
     });
 
-    const data = await response.json();
+    const data = await readApiResponse(response);
 
     if (!response.ok) {
       throw new Error(getApiError(data));
@@ -360,7 +369,7 @@ async function pollGeneration(localId) {
 
   try {
     const response = await fetch(`/api/status?id=${encodeURIComponent(current.remoteId)}`);
-    const data = await response.json();
+    const data = await readApiResponse(response);
 
     if (!response.ok) {
       throw new Error(getApiError(data));
@@ -584,26 +593,41 @@ function resizeImage(file) {
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(img.width, img.height));
-        const width = Math.max(1, Math.round(img.width * scale));
-        const height = Math.max(1, Math.round(img.height * scale));
+        let scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(img.width, img.height));
+        let width = Math.max(1, Math.round(img.width * scale));
+        let height = Math.max(1, Math.round(img.height * scale));
+        let quality = INITIAL_JPEG_QUALITY;
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        canvas.width = width;
-        canvas.height = height;
+        let bestDataUrl = "";
 
-        const outputType = file.type === "image/png" && file.size < 800_000
-          ? "image/png"
-          : "image/jpeg";
-
-        if (outputType === "image/jpeg") {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          canvas.width = width;
+          canvas.height = height;
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const dataUrl = canvas.toDataURL("image/jpeg", quality);
+          bestDataUrl = dataUrl;
+
+          if (textBytes(dataUrl) <= MAX_IMAGE_DATA_URL_BYTES) {
+            resolve(dataUrl);
+            return;
+          }
+
+          if (quality > MIN_JPEG_QUALITY) {
+            quality = Math.max(MIN_JPEG_QUALITY, quality - 0.08);
+          } else {
+            scale *= 0.82;
+            width = Math.max(1, Math.round(img.width * scale));
+            height = Math.max(1, Math.round(img.height * scale));
+            quality = INITIAL_JPEG_QUALITY;
+          }
         }
 
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL(outputType, JPEG_QUALITY));
+        resolve(bestDataUrl);
       };
       img.onerror = () => reject(new Error("Не удалось прочитать изображение"));
       img.src = reader.result;
@@ -612,6 +636,17 @@ function resizeImage(file) {
     reader.onerror = () => reject(new Error("Не удалось открыть файл"));
     reader.readAsDataURL(file);
   });
+}
+
+async function readApiResponse(response) {
+  const text = await response.text();
+
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    const details = text.replace(/\s+/g, " ").slice(0, 180);
+    throw new Error(`Сервер вернул не JSON (${response.status}). ${details}`);
+  }
 }
 
 function toPayloadImage(item) {
@@ -847,4 +882,8 @@ function formatDate(value) {
 function toNumber(value, fallback) {
   const number = Number.parseInt(value, 10);
   return Number.isNaN(number) ? fallback : Math.min(4, Math.max(1, number));
+}
+
+function textBytes(value) {
+  return new TextEncoder().encode(value).length;
 }
