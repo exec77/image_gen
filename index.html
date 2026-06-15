@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>image_gen</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Polza AI</p>
+        <h1>image_gen</h1>
+      </div>
+      <div class="model-pill" aria-label="Модель">openai/gpt-5.4-image-2</div>
+    </header>
+
+    <main class="app-shell">
+      <section class="workspace" aria-label="Параметры генерации">
+        <form id="generatorForm" class="tool-panel">
+          <label class="field field-prompt">
+            <span>Сюжет</span>
+            <textarea
+              id="prompt"
+              name="prompt"
+              rows="8"
+              maxlength="5000"
+              placeholder="Кадр из модного кампейна: героиня на крыше ночью, мягкий кинематографичный свет, городские огни, реалистичная фотография"
+              required
+            ></textarea>
+          </label>
+
+          <div class="control-grid">
+            <label class="field">
+              <span>Формат</span>
+              <select id="aspectRatio" name="aspectRatio">
+                <option value="auto">auto</option>
+                <option value="1:1">1:1</option>
+                <option value="2:3">2:3</option>
+                <option value="3:2">3:2</option>
+                <option value="3:4">3:4</option>
+                <option value="4:3">4:3</option>
+                <option value="4:5">4:5</option>
+                <option value="5:4">5:4</option>
+                <option value="9:16">9:16</option>
+                <option value="16:9">16:9</option>
+                <option value="21:9">21:9</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Разрешение</span>
+              <select id="imageResolution" name="imageResolution">
+                <option value="1K">1K</option>
+                <option value="2K" selected>2K</option>
+                <option value="4K">4K</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Количество</span>
+              <input id="count" name="count" type="number" min="1" max="4" value="1">
+            </label>
+
+            <label class="field">
+              <span>Провайдер</span>
+              <select id="provider" name="provider">
+                <option value="openai" selected>openai</option>
+                <option value="mie">mie</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="toggles" aria-label="Режимы референсов">
+            <label>
+              <input id="preserveCharacters" type="checkbox" checked>
+              <span>Сохранять внешность персонажей</span>
+            </label>
+            <label>
+              <input id="useReferenceStyle" type="checkbox" checked>
+              <span>Учитывать стиль примеров</span>
+            </label>
+          </div>
+
+          <div class="upload-grid">
+            <section
+              class="dropzone"
+              data-kind="references"
+              aria-label="Референсы и примеры"
+            >
+              <div class="dropzone-head">
+                <div>
+                  <h2>Референсы</h2>
+                  <p>Стиль, композиция, свет</p>
+                </div>
+                <button class="secondary-button" type="button" data-pick="references">
+                  Выбрать
+                </button>
+              </div>
+              <input id="referencesInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+              <div id="referencesPreview" class="preview-grid" aria-live="polite"></div>
+            </section>
+
+            <section
+              class="dropzone"
+              data-kind="characters"
+              aria-label="Фото персонажей"
+            >
+              <div class="dropzone-head">
+                <div>
+                  <h2>Персонажи</h2>
+                  <p>Лица, одежда, типаж</p>
+                </div>
+                <button class="secondary-button" type="button" data-pick="characters">
+                  Выбрать
+                </button>
+              </div>
+              <input id="charactersInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+              <div id="charactersPreview" class="preview-grid" aria-live="polite"></div>
+            </section>
+          </div>
+
+          <div class="form-actions">
+            <button id="generateButton" class="primary-button" type="submit">
+              Сгенерировать
+            </button>
+            <button id="clearButton" class="ghost-button" type="button">
+              Очистить
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="result-panel" aria-label="Результат">
+        <div class="result-head">
+          <div>
+            <p class="eyebrow">Результат</p>
+            <h2 id="statusTitle">Готов к генерации</h2>
+          </div>
+          <div id="statusBadge" class="status-badge">idle</div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-frame"></div>
+          <p>Здесь появятся готовые изображения.</p>
+        </div>
+
+        <div id="resultGrid" class="result-grid" hidden></div>
+        <pre id="debugBox" class="debug-box" hidden></pre>
+      </aside>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
