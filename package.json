@@ -1,0 +1,10 @@
+{
+  "name": "polza-image-generator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "check": "node --check server.mjs && node --check api/_polza.js && node --check api/generate.js && node --check api/status.js && node --check app.js"
+  }
+}

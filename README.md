@@ -1,0 +1,47 @@
+# Polza Image Generator
+
+Простой интерфейс для генерации изображений через Polza.ai Media API и модель `openai/gpt-5.4-image-2`.
+
+## Что внутри
+
+- Промпт, формат, разрешение, количество изображений и выбор провайдера `openai` / `mie`.
+- Загрузка референсов и фото персонажей с клиентским сжатием перед отправкой.
+- Серверные эндпоинты `/api/generate` и `/api/status`, чтобы ключ Polza не попадал в браузер.
+- Готовая структура для GitHub + Vercel.
+
+## Локальный запуск
+
+1. Создайте `.env.local`:
+
+   ```bash
+   POLZA_API_KEY=ваш_ключ_polza
+   ```
+
+2. Запустите:
+
+   ```bash
+   npm run dev
+   ```
+
+3. Откройте `http://localhost:4173`.
+
+## Деплой на Vercel
+
+1. Загрузите проект в GitHub.
+2. В Vercel создайте новый проект из этого репозитория. Если Vercel спросит настройки, выберите Framework Preset `Other`, Build Command оставьте пустым.
+3. В `Settings -> Environment Variables` добавьте:
+
+   ```bash
+   POLZA_API_KEY=ваш_ключ_polza
+   ```
+
+4. Нажмите Deploy. Тестовый домен будет вида `https://project-name.vercel.app`.
+
+## API
+
+Проект использует `POST https://polza.ai/api/v1/media` в асинхронном режиме и затем опрашивает `GET https://polza.ai/api/v1/media/{id}`.
+
+Документация Polza:
+
+- https://polza.ai/docs/gaidy/gpt-5-4-image-2
+- https://polza.ai/docs/api-reference/media/create
