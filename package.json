@@ -5,6 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "node server.mjs",
-    "check": "node --check server.mjs && node --check api/_polza.js && node --check api/generate.js && node --check api/status.js && node --check app.js"
+    "check": "node --check server.mjs && node --check api/_polza.js && node --check api/generate.js && node --check api/status.js && node --check app.js && node --check sw.js"
   }
 }

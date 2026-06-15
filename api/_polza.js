@@ -1,7 +1,12 @@
 export const POLZA_API_BASE =
   process.env.POLZA_API_BASE || "https://polza.ai/api/v1";
 
-export const MODEL_ID = "openai/gpt-5.4-image-2";
+export const IMAGE_MODELS = new Set([
+  "openai/gpt-5.4-image-2",
+  "google/gemini-3.1-flash-image-preview"
+]);
+
+export const DEFAULT_MODEL = "openai/gpt-5.4-image-2";
 
 const MAX_REQUEST_BYTES = 12 * 1024 * 1024;
 const MAX_IMAGE_BYTES_AS_DATA_URI = 2.8 * 1024 * 1024;
@@ -95,27 +100,19 @@ export function toIntInRange(value, fallback, min, max) {
   return Math.min(max, Math.max(min, parsed));
 }
 
-export function chooseAspectRatio(value, provider) {
+export function chooseModel(value) {
+  return IMAGE_MODELS.has(value) ? value : DEFAULT_MODEL;
+}
+
+export function chooseAspectRatio(value) {
   const common = new Set(["auto", "1:1", "9:16", "16:9", "4:3", "3:4"]);
-  const openaiOnly = new Set(["2:3", "3:2", "4:5", "5:4", "21:9"]);
+  const extra = new Set(["2:3", "3:2", "4:5", "5:4", "21:9"]);
 
-  if (provider === "mie") {
-    return common.has(value) ? value : "auto";
-  }
-
-  return common.has(value) || openaiOnly.has(value) ? value : "auto";
+  return common.has(value) || extra.has(value) ? value : "auto";
 }
 
-export function chooseResolution(value, provider) {
-  if (provider === "mie") {
-    return ["1K", "2K", "4K"].includes(value) ? value : "1K";
-  }
-
+export function chooseResolution(value) {
   return ["1K", "2K"].includes(value) ? value : "1K";
-}
-
-export function chooseProvider(value) {
-  return value === "mie" ? "mie" : "openai";
 }
 
 export function buildPrompt({

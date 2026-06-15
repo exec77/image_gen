@@ -1,9 +1,8 @@
 import {
-  MODEL_ID,
   buildPrompt,
   callPolza,
   chooseAspectRatio,
-  chooseProvider,
+  chooseModel,
   chooseResolution,
   cleanPrompt,
   getApiKey,
@@ -34,12 +33,10 @@ export default async function handler(req, res) {
       return sendJson(res, 400, { error: "Prompt is required" });
     }
 
-    const provider = chooseProvider(body.provider);
     const references = normalizeImageList(body.references, "reference");
     const characters = normalizeImageList(body.characters, "character");
     const imageItems = [...references, ...characters];
-    const model =
-      provider === "mie" ? `${MODEL_ID}@mie` : MODEL_ID;
+    const model = chooseModel(body.model);
 
     const input = {
       prompt: buildPrompt({
@@ -49,8 +46,8 @@ export default async function handler(req, res) {
         preserveCharacters: body.preserveCharacters !== false,
         useReferenceStyle: body.useReferenceStyle !== false
       }),
-      aspect_ratio: chooseAspectRatio(body.aspectRatio, provider),
-      image_resolution: chooseResolution(body.imageResolution, provider),
+      aspect_ratio: chooseAspectRatio(body.aspectRatio),
+      image_resolution: chooseResolution(body.imageResolution),
       n: toIntInRange(body.count, 1, 1, 4)
     };
 
