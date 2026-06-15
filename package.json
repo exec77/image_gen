@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
-    "check": "node --check scripts/dev-server.mjs && node --check api/_polza.js && node --check api/generate.js && node --check api/status.js && node --check public/app.js && node --check public/sw.js"
+    "check": "node --check index.js && node --check scripts/dev-server.mjs && node --check api/_polza.js && node --check api/generate.js && node --check api/status.js && node --check public/app.js && node --check public/sw.js"
   }
 }
