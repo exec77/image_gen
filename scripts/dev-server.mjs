@@ -3,10 +3,12 @@ import { readFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import generate from "./api/generate.js";
-import status from "./api/status.js";
+import generate from "../api/generate.js";
+import status from "../api/status.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.join(__dirname, "..");
+const publicDir = path.join(rootDir, "public");
 const PORT = Number.parseInt(process.env.PORT || "4173", 10);
 const HOST = process.env.HOST || "127.0.0.1";
 
@@ -40,9 +42,9 @@ createServer(async (req, res) => {
       requestUrl.pathname === "/"
         ? "index.html"
         : decodeURIComponent(requestUrl.pathname.replace(/^\/+/, ""));
-    const filePath = path.normalize(path.join(__dirname, safePath));
+    const filePath = path.normalize(path.join(publicDir, safePath));
 
-    if (!filePath.startsWith(__dirname)) {
+    if (!filePath.startsWith(publicDir)) {
       res.statusCode = 403;
       return res.end("Forbidden");
     }
@@ -68,7 +70,7 @@ createServer(async (req, res) => {
 });
 
 function loadLocalEnv() {
-  const envPath = path.join(__dirname, ".env.local");
+  const envPath = path.join(rootDir, ".env.local");
 
   if (!existsSync(envPath)) {
     return;

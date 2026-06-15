@@ -31,7 +31,7 @@
 ## Деплой на Vercel
 
 1. Загрузите проект в GitHub в репозиторий `image_gen`.
-2. В Vercel создайте новый проект из этого репозитория. Если Vercel спросит настройки, выберите Framework Preset `Other`, Build Command оставьте пустым.
+2. В Vercel создайте новый проект из этого репозитория. Если Vercel спросит настройки, выберите Framework Preset `Other`, Build Command оставьте пустым, Output Directory укажите `public`.
 3. В `Settings -> Environment Variables` добавьте:
 
    ```bash
